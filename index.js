@@ -7,6 +7,8 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+var users = new Array();
+/*
 const sendToAll = (clients, type, { id, name: userName }) => {
   Object.values(clients).forEach(client => {
     if (client.name !== userName) {
@@ -21,32 +23,39 @@ const sendToAll = (clients, type, { id, name: userName }) => {
 };
 const sendTo = (connection, message) => {
   connection.send(JSON.stringify(message));
-};
+};*/
 io.on('connection', (socket) => {
-  console.log("new  connection with id:" + socket.id)
+  console.log("new  connection with id:" + socket.id);
+  socket.emit("getUsers", users);
   socket.on("message", msg => {
-    console.log("Received message: %s", msg);
-    let data;
+    console.log("Received message:" + msg);
+    let data = msg;
 
 
     //accepting only JSON messages
+    /*
     try {
       data = JSON.parse(msg);
     } catch (e) {
       console.log("Invalid JSON");
       data = {};
-    }
+    }*/
     const { type, name, offer, answer, candidate } = data;
     switch (type) {
       //when a user tries to login
       case "login":
         //Check if username is available
+        users.push({ id: socket.id, name: msg.name });
+
+        socket.emit("newUser", { id: socket.id, name: name });
+
+
         if (users[name]) {
-          sendTo(socket, {
-            type: "login",
-            success: false,
-            message: "Username is unavailable"
-          });
+          /* sendTo(socket, {
+             type: "login",
+             success: false,
+             message: "Username is unavailable"
+           });*/
         } else {
           const id = 1;
           const loggedIn = Object.values(

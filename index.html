@@ -7,17 +7,53 @@
 </head>
 
 <body>
-  <button id="Connection">Call</button>
-  <button id="Accept">Accept Call</button>
+  <button id="connect">connect</button>
+  <button class="offerButton">Make an offer</button>
+  <button class="Accept">Accept Call</button>
   <script src="/socket.io/socket.io.js"></script>
-
+  <div id="cells">
+    <div id="user">
+    </div>
+  </div>
   <script>
     var socket = io();
 
-    socket.emit("message", { type: "connection", name: "patoche" + Math.random() })
+    document.getElementById("connect").addEventListener("click", function (event) {
+      socket.emit("message", { type: "login", name: "patoche" + Math.random() });
+    });
 
-    const connectionButton = document.getElementById("Connection");
-    const acceptButton = document.getElementById("Accept");
+
+    var userList = new Array();
+    var cells = document.getElementById("cells");
+    socket.on("getUsers", users => {
+      for (let i = 0; i < users.length; i++) {
+        addUsers(users[i]);
+      }
+    });
+    function addUsers(user) {
+      userList.push(user);
+      //Add to the list of user on the UI 
+      cells.innerHTML += `<div id="user${user.id}">${user.name}
+                              <button class="offerButton" id="${user.name}">Make an offer</button>
+                          </div>`
+    }
+
+    socket.on("newUser", user => {
+      addUsers(user);
+    });
+
+
+
+    const offerButton = document.getElementsByClassName("offerButton");
+    const acceptButton = document.getElementsByClassName("Accept");
+    for (let i = 0; i < offerButton.length; i++) {
+      offerButton[i].addEventListener("click", function (event) {
+        let name = this.id;
+        socket.emit("offer", { type: "offer", name: name });
+      });
+    }
+
+
   </script>
 </body>
 
