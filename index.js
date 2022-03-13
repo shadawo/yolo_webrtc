@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
         //Check if username is available
         users.push({ id: socket.id, name: msg.name });
 
-        socket.emit("newUser", { id: socket.id, name: name });
+        io.emit("newUser", { id: socket.id, name: name });
 
 
         if (users[name]) {
@@ -66,13 +66,6 @@ io.on('connection', (socket) => {
           socket.name = name;
           socket.id = id;
 
-          sendTo(socket, {
-            type: "login",
-            success: true,
-            users: loggedIn
-          });
-          // a changer pour les amis 
-          sendToAll(users, "updateUsers", socket);
         }
         break;
       case "offer":
@@ -82,11 +75,7 @@ io.on('connection', (socket) => {
         if (!!offerRecipient) {
           //setting that sender connected with recipient
           socket.otherName = name;
-          sendTo(offerRecipient, {
-            type: "offer",
-            offer,
-            name: socket.name
-          });
+
         }
         break;
       case "answer":
@@ -95,20 +84,14 @@ io.on('connection', (socket) => {
 
         if (!!answerRecipient) {
           socket.otherName = name;
-          sendTo(answerRecipient, {
-            type: "answer",
-            answer
-          });
+
         }
         break;
       case "candidate":
         const candidateRecipient = users[name];
 
         if (!!candidateRecipient) {
-          sendTo(candidateRecipient, {
-            type: "candidate",
-            candidate
-          });
+
         }
         break;
       case "leave":
@@ -117,16 +100,11 @@ io.on('connection', (socket) => {
         //notify the other user so he can disconnect his peer connection
         if (!!recipient) {
           recipient.otherName = null;
-          sendTo(recipient, {
-            type: "leave"
-          });
+
         }
         break;
       default:
-        sendTo(socket, {
-          type: "error",
-          message: "Command not found: " + type
-        });
+
         break;
     }
   });
@@ -141,7 +119,7 @@ io.on('connection', (socket) => {
           recipient.otherName = null;
         }
       }
-      sendToAll(users, "removeUser", socket);
+      //sendToAll(users, "removeUser", socket);
     }
   });
   //send immediatly a feedback to the incoming connection
