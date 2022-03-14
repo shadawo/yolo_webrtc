@@ -9,13 +9,26 @@ app.get('/', (req, res) => {
 
 
 let User = {
-  firstName,
-  lastName,
-  socketName
+  userName,
+  socketId
 };
 
 var users = new Array(User);
 
+function loofForUserSocketId(name) {
+  var i = 0;
+  while (name != users[i].name) {
+    i++;
+  }
+  return users[i].socketId;
+}
+function lookForUserName(id) {
+  var i = 0;
+  while (id != users[i].socketId) {
+    i++;
+  }
+  return users[i].name;
+}
 io.on('connection', (socket) => {
   console.log("new  connection with id:" + socket.id);
 
@@ -25,14 +38,6 @@ io.on('connection', (socket) => {
     const { type, name, offer, answer, candidate } = data;
     let data = msg;
 
-    //accepting only JSON messages
-    /*
-    try {
-      data = JSON.parse(msg);
-    } catch (e) {
-      console.log("Invalid JSON");
-      data = {};
-    }*/
 
     switch (type) {
       //when a user tries to login
@@ -40,41 +45,40 @@ io.on('connection', (socket) => {
       case "login":
         //Check if username is available
         //users.push({ id: socket.id, name: msg.name });
-        var name1 = msg.name;
-        var name2 = msg.lastName;
+        var userName = msg.name;
+        var socketId = socket.id;
         //register new user into Users => pas sur que ca marche
-        users.push({ name1, name2 });
+        users.push({ userName, socketId });
         //Send a msg to all user when a new user is connected
-        io.emit("newUser", { id: socket.id, name: name });
-        //verifier l'ordre ou faire un map entre socket et nom 
-        socket.name = msg.name;
+        io.emit("newUser", { name: userName });
 
         break;
       case "offer":
-        //if UserBexists then send him offer details
-        const offerRecipient = msg.name;
+        //pas de test d'erreur
+        //Get the recipient socketId
+        let recipientSocketId = loofForUserSocketId(msg.name);
+        //Get the sender name
+        let senderName = lookForUserName(socket.id);
+        //send the offer to the recipient 
+        io.to(recipientSocketId).emit("offer", senderName);
 
-        if (!!offerRecipient) {
-          //setting that sender connected with recipient
-          socket.otherName = name;
-
-        }
         break;
       case "answer":
-        //for ex. UserB answers UserA
-        const answerRecipient = msg.name;
 
-        if (!!answerRecipient) {
-          socket.otherName = name;
+        //Get the recipient socketId
+        let recipientSocketId1 = loofForUserSocketId(msg.name);
+        //Get the sender name
+        let senderName1 = lookForUserName(socket.id);
+        //send the answer to the recipient 
+        io.to(recipientSocketId1).emit("answer", senderName1);
 
-        }
         break;
       case "candidate":
-        const candidateRecipient = msg.name;
+        //Get the recipient socketId
+        let recipientSocketId2 = loofForUserSocketId(msg.name);
+        //send the answer to the recipient 
+        io.to(recipientSocketId2).emit("iceCanditate", msg.candidate);
 
-        if (!!candidateRecipient) {
-
-        }
         break;
       case "leave":
         recipient = msg.name;
