@@ -7,30 +7,23 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-var users = new Array();
-/*
-const sendToAll = (clients, type, { id, name: userName }) => {
-  Object.values(clients).forEach(client => {
-    if (client.name !== userName) {
-      client.send(
-        JSON.stringify({
-          type,
-          user: { id, userName }
-        })
-      )
-    }
-  })
+
+let User = {
+  firstName,
+  lastName,
+  socketName
 };
-const sendTo = (connection, message) => {
-  connection.send(JSON.stringify(message));
-};*/
+
+var users = new Array(User);
+
 io.on('connection', (socket) => {
   console.log("new  connection with id:" + socket.id);
-  socket.emit("getUsers", users);
+
   socket.on("message", msg => {
     console.log("Received message:" + msg);
-    let data = msg;
 
+    const { type, name, offer, answer, candidate } = data;
+    let data = msg;
 
     //accepting only JSON messages
     /*
@@ -40,37 +33,26 @@ io.on('connection', (socket) => {
       console.log("Invalid JSON");
       data = {};
     }*/
-    const { type, name, offer, answer, candidate } = data;
+
     switch (type) {
       //when a user tries to login
+      //a voir ce quon recup du microservice de login 
       case "login":
         //Check if username is available
-        users.push({ id: socket.id, name: msg.name });
-
+        //users.push({ id: socket.id, name: msg.name });
+        var name1 = msg.name;
+        var name2 = msg.lastName;
+        //register new user into Users => pas sur que ca marche
+        users.push({ name1, name2 });
+        //Send a msg to all user when a new user is connected
         io.emit("newUser", { id: socket.id, name: name });
+        //verifier l'ordre ou faire un map entre socket et nom 
+        socket.name = msg.name;
 
-
-        if (users[name]) {
-          /* sendTo(socket, {
-             type: "login",
-             success: false,
-             message: "Username is unavailable"
-           });*/
-        } else {
-          const id = 1;
-          const loggedIn = Object.values(
-            users
-          ).map(({ id, name: userName }) => ({ id, userName }));
-
-          users[name] = socket;
-          socket.name = name;
-          socket.id = id;
-
-        }
         break;
       case "offer":
         //if UserBexists then send him offer details
-        const offerRecipient = users[name];
+        const offerRecipient = msg.name;
 
         if (!!offerRecipient) {
           //setting that sender connected with recipient
@@ -80,7 +62,7 @@ io.on('connection', (socket) => {
         break;
       case "answer":
         //for ex. UserB answers UserA
-        const answerRecipient = users[name];
+        const answerRecipient = msg.name;
 
         if (!!answerRecipient) {
           socket.otherName = name;
@@ -88,14 +70,14 @@ io.on('connection', (socket) => {
         }
         break;
       case "candidate":
-        const candidateRecipient = users[name];
+        const candidateRecipient = msg.name;
 
         if (!!candidateRecipient) {
 
         }
         break;
       case "leave":
-        recipient = users[name];
+        recipient = msg.name;
 
         //notify the other user so he can disconnect his peer connection
         if (!!recipient) {
@@ -114,12 +96,14 @@ io.on('connection', (socket) => {
       delete users[socket.name];
       if (socket.otherName) {
         console.log("Disconnecting from ", socket.otherName);
-        const recipient = users[socket.otherName];
+        //send to all user that this socket is deconnected
+        io.emit("userLeave", socket.name);
         if (!!recipient) {
           recipient.otherName = null;
         }
       }
-      //sendToAll(users, "removeUser", socket);
+
+
     }
   });
   //send immediatly a feedback to the incoming connection

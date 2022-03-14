@@ -18,6 +18,14 @@
   <script>
     var socket = io();
 
+    socket.emit("message", msg = { type: "login", name: "firstName" });
+
+    var msg = { type, name, offer, answer, candidate };
+
+    /*
+    var firstName = ...
+    var lastName = ...
+   */
     document.getElementById("connect").addEventListener("click", function (event) {
       socket.emit("message", { type: "login", name: "patoche" + Math.random() });
     });
