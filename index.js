@@ -16,18 +16,23 @@ let User = {
 var users = new Array(User);
 
 function loofForUserSocketId(name) {
-  var i = 0;
-  while (name != users[i].name) {
-    i++;
+  let i = 0;
+  for (i;i<users.length();i++){
+    if(users[i].userName == name){
+      return users[i].socketId;
+    }
   }
-  return users[i].socketId;
+  return null;
+  
 }
 function lookForUserName(id) {
-  var i = 0;
-  while (id != users[i].socketId) {
-    i++;
+  let i = 0;
+  for (i;i<users.length();i++){
+    if(users[i].socketId == socketId){
+      return users[i].userName;
+    }
   }
-  return users[i].name;
+  return null;
 }
 io.on('connection', (socket) => {
   console.log("new  connection with id:" + socket.id);
@@ -44,25 +49,25 @@ io.on('connection', (socket) => {
       
       case "login":
 
-        //Check if username is available
-        //users.push({ id: socket.id, name: msg.name });
-        var userName = msg.name;
-        var socketId = socket.id;
+        let userName = msg.name;
+        let socketId = socket.id;
         //register new user into Users => pas sur que ca marche
         users.push({ userName, socketId });
         //Send a msg to all user when a new user is connected
-        io.emit("newUser", { name: userName });
+        socket.broadcast.emit("newUser", { name: userName });
 
         break;
       case "offer":
 
-        //pas de test d'erreur
         //Get the recipient socketId
         let recipientSocketId = loofForUserSocketId(msg.name);
         //Get the sender name
         let senderName = lookForUserName(socket.id);
+
+        if(senderName != null && recipientSocketId != null){
         //send the offer to the recipient 
         io.to(recipientSocketId).emit("offer", senderName);
+        }
 
         break;
       case "answer":
@@ -71,8 +76,10 @@ io.on('connection', (socket) => {
         let recipientSocketId1 = loofForUserSocketId(msg.name);
         //Get the sender name
         let senderName1 = lookForUserName(socket.id);
+        if(senderName1 != null && recipientSocketId1 != null){
         //send the answer to the recipient 
         io.to(recipientSocketId1).emit("answer", senderName1);
+        }
 
         break;
       case "candidate":
@@ -80,7 +87,9 @@ io.on('connection', (socket) => {
         //Get the recipient socketId
         let recipientSocketId2 = loofForUserSocketId(msg.name);
         //send the answer to the recipient 
+        if(msg.name != null && recipientSocketId2 != null){
         io.to(recipientSocketId2).emit("iceCanditate", msg.candidate);
+        }
 
         break;
       case "leave":
@@ -92,7 +101,6 @@ io.on('connection', (socket) => {
 
         
         break;
-
       default:
         console.log("Error in switch");
 
@@ -101,15 +109,16 @@ io.on('connection', (socket) => {
   });
 
   socket.on("close", function () {
-
-    if (socket.id !=users[i].socketId) {
-      i++;
+    let index = 0;
+    if (socket.id != users[index].socketId) {
+      index++;
     }
       else{ 
-        io.emit("userLeave", users[i].name);
-        delete users[i];
+        io.emit("userLeave", users[index].name);
+        delete users[index];
     }
   });
+
   //send immediatly a feedback to the incoming connection
   socket.send(
     JSON.stringify({
