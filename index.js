@@ -41,8 +41,9 @@ io.on('connection', (socket) => {
 
     switch (type) {
       //when a user tries to login
-      //a voir ce quon recup du microservice de login 
+      
       case "login":
+
         //Check if username is available
         //users.push({ id: socket.id, name: msg.name });
         var userName = msg.name;
@@ -54,6 +55,7 @@ io.on('connection', (socket) => {
 
         break;
       case "offer":
+
         //pas de test d'erreur
         //Get the recipient socketId
         let recipientSocketId = loofForUserSocketId(msg.name);
@@ -74,6 +76,7 @@ io.on('connection', (socket) => {
 
         break;
       case "candidate":
+
         //Get the recipient socketId
         let recipientSocketId2 = loofForUserSocketId(msg.name);
         //send the answer to the recipient 
@@ -81,33 +84,30 @@ io.on('connection', (socket) => {
 
         break;
       case "leave":
-        recipient = msg.name;
 
+        let recipientSocketId3 = loofForUserSocketId(msg.name);
+        let senderName2 = lookForUserName(socket.id);
         //notify the other user so he can disconnect his peer connection
-        if (!!recipient) {
-          recipient.otherName = null;
+        io.to(recipientSocketId3).emit("disconnection", senderName2);
 
-        }
+        
         break;
+
       default:
+        console.log("Error in switch");
 
         break;
     }
   });
 
   socket.on("close", function () {
-    if (socket.name) {
-      delete users[socket.name];
-      if (socket.otherName) {
-        console.log("Disconnecting from ", socket.otherName);
-        //send to all user that this socket is deconnected
-        io.emit("userLeave", socket.name);
-        if (!!recipient) {
-          recipient.otherName = null;
-        }
-      }
 
-
+    if (socket.id !=users[i].socketId) {
+      i++;
+    }
+      else{ 
+        io.emit("userLeave", users[i].name);
+        delete users[i];
     }
   });
   //send immediatly a feedback to the incoming connection
@@ -118,8 +118,6 @@ io.on('connection', (socket) => {
     })
   );
 });
-
-
 
 http.listen(port, () => {
   console.log(`Socket.IO server running at http://localhost:${port}/`);
