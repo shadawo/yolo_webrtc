@@ -17,38 +17,81 @@
   </div>
   <script>
     var socket = io();
+    var userName = "patoche";
 
-    socket.emit("message", msg = { type: "login", name: "firstName" });
+    socket.emit("request", msg = { type: "login", name: userName+Math.random() });
 
-    var msg = { type, name, offer, answer, candidate };
+   
 
     /*
     var firstName = ...
     var lastName = ...
    */
+  /*
     document.getElementById("connect").addEventListener("click", function (event) {
-      socket.emit("message", { type: "login", name: "patoche" + Math.random() });
+      socket.emit("request", { type: "login", name: userName + Math.random() });
     });
-
+*/
 
     var userList = new Array();
+
     var cells = document.getElementById("cells");
     socket.on("getUsers", users => {
       for (let i = 0; i < users.length; i++) {
         addUsers(users[i]);
       }
     });
+
     function addUsers(user) {
       userList.push(user);
+      console.log("coycoy");
+      let id = userList.length;
       //Add to the list of user on the UI 
-      cells.innerHTML += `<div id="user${user.id}">${user.name}
-                              <button class="offerButton" id="${user.name}">Make an offer</button>
+      cells.innerHTML += `<div id="user${id}">${user}
+                              <button class="offerButton" id="${user}">Make an offer</button>
                           </div>`
     }
 
     socket.on("newUser", user => {
       addUsers(user);
     });
+    
+    socket.on("connectedUsers", usersAlreadyConnected => {
+      for (let i = 0; i < usersAlreadyConnected.length; i++) {
+        addUsers(usersAlreadyConnected[i]);
+      }
+    });
+
+   
+     
+    socket.on("offer",senderName =>{
+      console.log("Demande de connexion de:"+ senderName);
+      document.getElementById("Accept").addEventListener("click", function (event) {
+        socket.emit("request", { type: "answer", name: senderName });
+      });
+     
+
+
+    });
+    socket.on("answer", senderName1 =>{
+      console.log("Connexion accepté"+ senderName1);
+      //envoie de l'object Ice candidate
+        /*socket.emit("request", { type: "candidate", candidate : IceCandidate});*/
+    });
+    socket.on("candidate", iceCandidate=>{
+      //reception objet Ice et creation peer to peer datachannel
+      
+
+
+
+    });
+    socket.on("disconnection", senderName2 =>{
+
+    });
+
+
+
+    
 
 
 
@@ -57,7 +100,7 @@
     for (let i = 0; i < offerButton.length; i++) {
       offerButton[i].addEventListener("click", function (event) {
         let name = this.id;
-        socket.emit("offer", { type: "offer", name: name });
+        socket.emit("request", { type: "offer", userName: name });
       });
     }
 

@@ -8,12 +8,8 @@ app.get('/', (req, res) => {
 });
 
 
-let User = {
-  userName,
-  socketId
-};
 
-var users = new Array(User);
+var users = new Array();
 
 function loofForUserSocketId(name) {
   let i = 0;
@@ -23,8 +19,16 @@ function loofForUserSocketId(name) {
     }
   }
   return null;
-  
 }
+
+function getUsersNames(){
+  let usersNames=new Array();
+  for(let i=0;i<users.length;i++){
+    usersNames.push(users[i].userName);
+  }
+  return usersNames;
+}
+
 function lookForUserName(id) {
   let i = 0;
   for (i;i<users.length();i++){
@@ -40,8 +44,9 @@ io.on('connection', (socket) => {
   socket.on("request", msg => {
     console.log("Received message:" + msg);
 
-    const { type, name, offer, answer, candidate } = data;
     let data = msg;
+    const { type, name, offer, answer, candidate } = data;
+    
 
 
     switch (type) {
@@ -51,11 +56,14 @@ io.on('connection', (socket) => {
 
         let userName = msg.name;
         let socketId = socket.id;
+        console.log("name :" + userName+"\n" + "id : "+ socketId);
+        //send the list of users already connected
+        socket.emit("connectedUsers",getUsersNames());
         //register new user into Users => pas sur que ca marche
         users.push({ userName, socketId });
         //Send a msg to all user when a new user is connected
-        socket.broadcast.emit("newUser", userName );
 
+        socket.broadcast.emit("newUser", userName );
         break;
       case "offer":
 
