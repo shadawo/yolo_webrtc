@@ -35,6 +35,14 @@
 
     var userList = new Array();
 
+    var options = {
+      optional: [
+        { DtlsSrtpKeyAgreement: true },
+        { RtpDataChannels: true }
+      ]
+    }
+
+
     var cells = document.getElementById("cells");
     socket.on("getUsers", users => {
       for (let i = 0; i < users.length; i++) {
@@ -61,27 +69,84 @@
       }
     });
 
+    //'''''''''''''''''''''''''''Caller side''''''''''''''''''''''''''''''''//
+
+    // callee accepted the offer 
+    socket.on("answer", receiverName => {
+      //création sdp et envoi de sdp puis de ICE
+      //côté caller
+      var callee = receiverName;
+      console.log("Connexion accepté" + receiverName);
+
+      //Creating the caller peer connection and his sdp
+      var pcCaller = new RTCPeerConnection(options);
+      var CallerSdp = pcCaller.createOffer();
+      //Sending the caller sdp to the callee  
+      socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp })
+      //Setting the caller (his) local description
+      await pcCaller.setLocalDescription();
+    });
+    //Waiting for callee sdp 
+
+    // when callee send spd info
+    socket.on("calleeSdp", async calleeSdp => {
+      //Caller set callee description
+      const remoteDesc = new RTCSessionDescription(calleeSdp);
+      await pcCaller.setRemoteDescription(remoteDesc);
+      //Then 
+      //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
+      pcCaller.addEventListener('icecandidate', event => {
+        if (event.candidate) {
+          socket.emit("request", { type: 'iceCandidate', name: callee, candidate: event.candidate });
+        }
+      });
+
+    });
+    // Listen for connectionstatechange on the local RTCPeerConnection
+    pcCaller.addEventListener('connectionstatechange', event => {
+      if (pcCaller.connectionState === 'connected') {
+        // Peers connected!
+        console.log("GGWP peers connected!")
+      }
+    });
 
 
+    //-----------------------------Callee side----------------------------------//
+
+    // callee received an offer from the caller 
     socket.on("offer", senderName => {
       console.log("Demande de connexion de:" + senderName);
       cells.innerHTML += `<button class=acceptButton id=${userName}>Accept offer send by:${senderName}</button>`;
-      /* document.getElementById("Accept").addEventListener("click", function (event) {
-         socket.emit("request", { type: "answer", name: senderName });*/
     });
 
 
-
-
-
-    socket.on("answer", senderName1 => {
-      console.log("Connexion accepté" + senderName1);
-
+    //receiving a peerConnection offer from the caller (send by the signaling server)
+    socket.on("pcOffer", async callerSdp => {
+      //creating the callee peer connection
+      var pcCallee = new RTCPeerConnection(options);
+      //Setting the caller sdp description
+      await pcCallee.setRemoteDescription(callerSdp);
+      //Creating the callee sdp answer 
+      var calleeSdp = pcCallee.createAnswer();
+      //Sending the callee sdp to the caller 
+      socket.emit("request", { type: "sdpCallee", name: caller, sdp: calleeSdp })
     });
-    socket.on("candidate", iceCandidate => {
+
+    //Signaling server emiting caller ice candidate 
+    socket.on('callerIceCandidate', async callerIceCandidate => {
+
+      if (callerIceCandidate.iceCandidate) {
+        //Try to add the caller ice candidate 
+        try {
+          await pcCallee.addIceCandidate(callerIceCandidate.iceCandidate);
+        } catch (e) {
+          console.error('Error adding received ice candidate', e);
+        }
+      }
+    });
+
+    socket.on("iceCandidate", async iceCandidate => {
       //reception objet Ice et creation peer to peer datachannel
-
-
 
 
     });
@@ -92,14 +157,15 @@
     const acceptButton = document.getElementsByClassName("Accept");
     document.addEventListener('click', function (e) {
       if (e.target && e.target.className == 'offerButton') {
-        //do something
+        //Caller sending his offer to the callee 
         socket.emit("request", { type: "offer", name: e.target.id });
         console.log(e.target.id);
       }
       if (e.target && e.target.className == 'acceptButton') {
-        //do something
+        //callee accepted the offer and sending back his answer to the caller 
         socket.emit("request", { type: "answer", name: e.target.id });
         console.log(e.target.id);
+        var caller = e.target.id;
       }
 
     });

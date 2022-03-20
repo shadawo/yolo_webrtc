@@ -45,7 +45,7 @@ io.on('connection', (socket) => {
     console.log("Received message:" + msg.type);
 
     let data = msg;
-    const { type, name, offer, answer, candidate } = data;
+    const { type, name, offer, answer, candidate, sdp } = data;
 
 
 
@@ -91,13 +91,32 @@ io.on('connection', (socket) => {
         }
 
         break;
-      case "candidate":
+      case "sdpCaller":
+
+        //Get the recipient socketId
+        let recipientSocketId4 = loofForUserSocketId(msg.name);
+        //send the sdp to the recipient 
+        if (msg.name != null && recipientSocketId4 != null) {
+          io.to(recipientSocketId4).emit("pcOffer", msg.sdp);
+        }
+        break;
+
+      case "sdpCallee":
+        //Get the recipient socketId
+        let recipientSocketId5 = loofForUserSocketId(msg.name);
+        //send the sdp to the recipient 
+        if (msg.name != null && recipientSocketId5 != null) {
+          io.to(recipientSocketId4).emit("calleeSdp", msg.sdp);
+        }
+        break;
+
+      case "iceCandidate":
 
         //Get the recipient socketId
         let recipientSocketId2 = loofForUserSocketId(msg.name);
-        //send the answer to the recipient 
+        //send the iceCandidate to the recipient 
         if (msg.name != null && recipientSocketId2 != null) {
-          io.to(recipientSocketId2).emit("iceCanditate", msg.candidate);
+          io.to(recipientSocketId2).emit("iceCandidate", msg.candidate);
         }
 
         break;
