@@ -41,7 +41,8 @@
         { RtpDataChannels: true }
       ]
     }
-
+    var caller;
+    var pcCaller;
 
     var cells = document.getElementById("cells");
     socket.on("getUsers", users => {
@@ -72,15 +73,15 @@
     //'''''''''''''''''''''''''''Caller side''''''''''''''''''''''''''''''''//
 
     // callee accepted the offer 
-    socket.on("answer", receiverName => {
+    socket.on("answer", async receiverName => {
       //création sdp et envoi de sdp puis de ICE
       //côté caller
       var callee = receiverName;
-      console.log("Connexion accepté" + receiverName);
+      console.log("Connexion accepté de :" + receiverName);
 
       //Creating the caller peer connection and his sdp
-      var pcCaller = new RTCPeerConnection(options);
-      var CallerSdp = pcCaller.createOffer();
+      pcCaller = new RTCPeerConnection(options);
+      var CallerSdp = await pcCaller.createOffer();
       //Sending the caller sdp to the callee  
       socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp })
       //Setting the caller (his) local description
@@ -93,22 +94,24 @@
       //Caller set callee description
       const remoteDesc = new RTCSessionDescription(calleeSdp);
       await pcCaller.setRemoteDescription(remoteDesc);
+      console.log("callee descripiton set");
       //Then 
       //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
       pcCaller.addEventListener('icecandidate', event => {
+        console.log("ice candidate found");
         if (event.candidate) {
           socket.emit("request", { type: 'iceCandidate', name: callee, candidate: event.candidate });
         }
       });
+      // Listen for connectionstatechange on the local RTCPeerConnection
+      pcCaller.addEventListener('connectionstatechange', event => {
+        if (pcCaller.connectionState === 'connected') {
+          // Peers connected!
+          console.log("GGWP peers connected!");
+        }
+      });
+    });
 
-    });
-    // Listen for connectionstatechange on the local RTCPeerConnection
-    pcCaller.addEventListener('connectionstatechange', event => {
-      if (pcCaller.connectionState === 'connected') {
-        // Peers connected!
-        console.log("GGWP peers connected!")
-      }
-    });
 
 
     //-----------------------------Callee side----------------------------------//
@@ -116,7 +119,7 @@
     // callee received an offer from the caller 
     socket.on("offer", senderName => {
       console.log("Demande de connexion de:" + senderName);
-      cells.innerHTML += `<button class=acceptButton id=${userName}>Accept offer send by:${senderName}</button>`;
+      cells.innerHTML += `<button class=acceptButton id=${senderName}>Accept offer send by:${senderName}</button>`;
     });
 
 
@@ -127,7 +130,7 @@
       //Setting the caller sdp description
       await pcCallee.setRemoteDescription(callerSdp);
       //Creating the callee sdp answer 
-      var calleeSdp = pcCallee.createAnswer();
+      var calleeSdp = await pcCallee.createAnswer();
       //Sending the callee sdp to the caller 
       socket.emit("request", { type: "sdpCallee", name: caller, sdp: calleeSdp })
     });
@@ -162,10 +165,11 @@
         console.log(e.target.id);
       }
       if (e.target && e.target.className == 'acceptButton') {
+        console.log(e.target);
         //callee accepted the offer and sending back his answer to the caller 
         socket.emit("request", { type: "answer", name: e.target.id });
         console.log(e.target.id);
-        var caller = e.target.id;
+        caller = e.target.id;
       }
 
     });

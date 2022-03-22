@@ -106,7 +106,7 @@ io.on('connection', (socket) => {
         let recipientSocketId5 = loofForUserSocketId(msg.name);
         //send the sdp to the recipient 
         if (msg.name != null && recipientSocketId5 != null) {
-          io.to(recipientSocketId4).emit("calleeSdp", msg.sdp);
+          io.to(recipientSocketId5).emit("calleeSdp", msg.sdp);
         }
         break;
 
