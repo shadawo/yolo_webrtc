@@ -36,6 +36,19 @@
     var userList = new Array();
 
     var options = {
+      iceServers: [
+        {
+          urls: [
+            ":1.l.google.com:19302",
+            ":2.l.google.com:19302",
+          ],
+        },
+        {
+          urls: [
+            ":global..twilio.com:3478?transport=udp",
+          ],
+        },
+      ],
       optional: [
         { DtlsSrtpKeyAgreement: true },
         { RtpDataChannels: true }
@@ -80,7 +93,7 @@
       console.log("Connexion accepté de :" + receiverName);
 
       //Creating the caller peer connection and his sdp
-      pcCaller = new RTCPeerConnection(options);
+      pcCaller = new RTCPeerConnection([options]);
       var CallerSdp = await pcCaller.createOffer();
       //Sending the caller sdp to the callee  
       socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp })
@@ -126,7 +139,7 @@
     //receiving a peerConnection offer from the caller (send by the signaling server)
     socket.on("pcOffer", async callerSdp => {
       //creating the callee peer connection
-      var pcCallee = new RTCPeerConnection(options);
+      var pcCallee = new RTCPeerConnection([options]);
       //Setting the caller sdp description
       await pcCallee.setRemoteDescription(callerSdp);
       //Creating the callee sdp answer 

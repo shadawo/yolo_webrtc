@@ -116,7 +116,7 @@ io.on('connection', (socket) => {
         let recipientSocketId2 = loofForUserSocketId(msg.name);
         //send the iceCandidate to the recipient 
         if (msg.name != null && recipientSocketId2 != null) {
-          io.to(recipientSocketId2).emit("iceCandidate", msg.candidate);
+          io.to(recipientSocketId2).emit("CallerIceCandidate", msg.candidate);
         }
 
         break;
