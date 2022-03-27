@@ -38,29 +38,13 @@
     var options = {
       iceServers: [
         {
-<<<<<<< HEAD
           urls: "stun:stun.l.google.com:19302"
         }
-=======
-          urls: [
-            ":1.l.google.com:19302",
-            ":2.l.google.com:19302",
-          ],
-        },
-        {
-          urls: [
-            ":global..twilio.com:3478?transport=udp",
-          ],
-        },
-      ],
-      optional: [
-        { DtlsSrtpKeyAgreement: true },
-        { RtpDataChannels: true }
->>>>>>> acf549c697d49cd6f71b2d24c507324e587bbe76
       ]
     }
     var caller;
     var pcCaller;
+    var pcCallee;
     /*
         const stream = navigator.mediaDevices.getUserMedia({ audio: true });
     
@@ -108,20 +92,19 @@
       console.log("Connexion accepté de :" + receiverName);
 
       //Creating the caller peer connection and his sdp
-<<<<<<< HEAD
       pcCaller = new RTCPeerConnection();
       pcCaller.createDataChannel("dataChannel");
       pcCaller.onicecandidate = e => {
         if (e.candidate === null) {
-          console.log(pcCaller.localDescription.sdp)
+          //console.log(pcCaller.localDescription.sdp)
         }
-        console.log(e.candidate);
+        else {
+          console.log("ice candidate trouvé : ");
+          console.log(e.candidate);
+        }
+
       };
       var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
-=======
-      pcCaller = new RTCPeerConnection([options]);
-      var CallerSdp = await pcCaller.createOffer();
->>>>>>> acf549c697d49cd6f71b2d24c507324e587bbe76
       //Sending the caller sdp to the callee  
       socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp })
       //Setting the caller (his) local description
@@ -148,8 +131,10 @@
 
 
       pcCaller.addEventListener('icecandidate', event => {
-        console.log("ice candidate found");
-        if (event.candidate) {
+
+        if (event.candidate != null) {
+          console.log("ice candidate found");
+          console.log(event.candidate);
           socket.emit("request", { type: 'iceCandidate', name: callee, candidate: event.candidate });
         }
       });
@@ -177,11 +162,7 @@
     //receiving a peerConnection offer from the caller (send by the signaling server)
     socket.on("pcOffer", async callerSdp => {
       //creating the callee peer connection
-<<<<<<< HEAD
-      var pcCallee = new RTCPeerConnection();
-=======
-      var pcCallee = new RTCPeerConnection([options]);
->>>>>>> acf549c697d49cd6f71b2d24c507324e587bbe76
+      pcCallee = new RTCPeerConnection();
       //Setting the caller sdp description
       await pcCallee.setRemoteDescription(callerSdp);
       console.log("caller description set:");
@@ -194,22 +175,18 @@
 
     //Signaling server emiting caller ice candidate 
     socket.on('callerIceCandidate', async callerIceCandidate => {
-
-      if (callerIceCandidate.iceCandidate) {
+      console.log(callerIceCandidate);
+      if (callerIceCandidate) {
         //Try to add the caller ice candidate 
         try {
-          await pcCallee.addIceCandidate(callerIceCandidate.iceCandidate);
+          await pcCallee.addIceCandidate(callerIceCandidate);
+          console.log("caller ice cadidate added");
         } catch (e) {
           console.error('Error adding received ice candidate', e);
         }
       }
     });
 
-    socket.on("iceCandidate", async iceCandidate => {
-      //reception objet Ice et creation peer to peer datachannel
-
-
-    });
     socket.on("disconnection", senderName2 => {
 
     });
