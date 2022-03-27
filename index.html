@@ -34,15 +34,26 @@
   */
 
     var userList = new Array();
-
+    var callee;
     var options = {
-      optional: [
-        { DtlsSrtpKeyAgreement: true },
-        { RtpDataChannels: true }
+      iceServers: [
+        {
+          urls: "stun:stun.l.google.com:19302"
+        }
       ]
     }
     var caller;
     var pcCaller;
+    /*
+        const stream = navigator.mediaDevices.getUserMedia({ audio: true });
+    
+        var pcCaller = new RTCPeerConnection(options);;
+        const audioTrack = stream.getTracks().array.forEach(track => {
+         pcCaller.addTrack(track, stream);
+        });;
+    
+    */
+
 
     var cells = document.getElementById("cells");
     socket.on("getUsers", users => {
@@ -76,16 +87,23 @@
     socket.on("answer", async receiverName => {
       //création sdp et envoi de sdp puis de ICE
       //côté caller
-      var callee = receiverName;
+      callee = receiverName;
       console.log("Connexion accepté de :" + receiverName);
 
       //Creating the caller peer connection and his sdp
-      pcCaller = new RTCPeerConnection(options);
-      var CallerSdp = await pcCaller.createOffer();
+      pcCaller = new RTCPeerConnection();
+      pcCaller.createDataChannel("dataChannel");
+      pcCaller.onicecandidate = e => {
+        if (e.candidate === null) {
+          console.log(pcCaller.localDescription.sdp)
+        }
+        console.log(e.candidate);
+      };
+      var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
       //Sending the caller sdp to the callee  
       socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp })
       //Setting the caller (his) local description
-      await pcCaller.setLocalDescription();
+      await pcCaller.setLocalDescription(CallerSdp);
     });
     //Waiting for callee sdp 
 
@@ -93,16 +111,27 @@
     socket.on("calleeSdp", async calleeSdp => {
       //Caller set callee description
       const remoteDesc = new RTCSessionDescription(calleeSdp);
+      console.log(pcCaller.iceGatheringState);
       await pcCaller.setRemoteDescription(remoteDesc);
       console.log("callee descripiton set");
+      console.log(remoteDesc);
+
+      //navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      //pcCaller.addStream(localStream);
       //Then 
       //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
+
+      console.log(pcCaller.iceGatheringState);
+
+
+
       pcCaller.addEventListener('icecandidate', event => {
         console.log("ice candidate found");
         if (event.candidate) {
           socket.emit("request", { type: 'iceCandidate', name: callee, candidate: event.candidate });
         }
       });
+
       // Listen for connectionstatechange on the local RTCPeerConnection
       pcCaller.addEventListener('connectionstatechange', event => {
         if (pcCaller.connectionState === 'connected') {
@@ -126,9 +155,11 @@
     //receiving a peerConnection offer from the caller (send by the signaling server)
     socket.on("pcOffer", async callerSdp => {
       //creating the callee peer connection
-      var pcCallee = new RTCPeerConnection(options);
+      var pcCallee = new RTCPeerConnection();
       //Setting the caller sdp description
       await pcCallee.setRemoteDescription(callerSdp);
+      console.log("caller description set:");
+      console.log(callerSdp);
       //Creating the callee sdp answer 
       var calleeSdp = await pcCallee.createAnswer();
       //Sending the callee sdp to the caller 
