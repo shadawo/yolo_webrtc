@@ -97,7 +97,7 @@ io.on('connection', (socket) => {
         let recipientSocketId4 = loofForUserSocketId(msg.name);
         //send the sdp to the recipient 
         if (msg.name != null && recipientSocketId4 != null) {
-          io.to(recipientSocketId4).emit("pcOffer", msg.sdp);
+          io.to(recipientSocketId4).emit("pcOffer", msg.sdp, msg.dc);
         }
         break;
 
@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
         }
         break;
 
-      case "iceCandidate":
+      case "iceCandidateToCallee":
 
         //Get the recipient socketId
         let recipientSocketId2 = loofForUserSocketId(msg.name);
@@ -118,6 +118,17 @@ io.on('connection', (socket) => {
         if (msg.name != null && recipientSocketId2 != null) {
           console.log(msg.candidate);
           io.to(recipientSocketId2).emit("callerIceCandidate", msg.candidate);
+        }
+
+        break;
+      case "iceCandidateToCaller":
+
+        //Get the recipient socketId
+        let recipientSocketId6 = loofForUserSocketId(msg.name);
+        //send the iceCandidate to the recipient 
+        if (msg.name != null && recipientSocketId6 != null) {
+          console.log(msg.candidate);
+          io.to(recipientSocketId6).emit("calleeIceCandidate", msg.candidate);
         }
 
         break;

@@ -45,6 +45,7 @@
     var caller;
     var pcCaller;
     var pcCallee;
+    var dataChannel;
     /*
         const stream = navigator.mediaDevices.getUserMedia({ audio: true });
     
@@ -93,7 +94,17 @@
 
       //Creating the caller peer connection and his sdp
       pcCaller = new RTCPeerConnection();
-      pcCaller.createDataChannel("dataChannel");
+      dataChannel = pcCaller.createDataChannel("dataChannel");
+
+
+      pcCaller.addEventListener('connectionstatechange', event => {
+        console.log("connection ?")
+        if (pcCaller.connectionState === 'connected') {
+          // Peers connected!
+          console.log("GGWP peers connected!");
+        }
+      });
+
       pcCaller.onicecandidate = e => {
         if (e.candidate === null) {
           //console.log(pcCaller.localDescription.sdp)
@@ -106,7 +117,7 @@
       };
       var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
       //Sending the caller sdp to the callee  
-      socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp })
+      socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp, dc: dataChannel })
       //Setting the caller (his) local description
       await pcCaller.setLocalDescription(CallerSdp);
     });
@@ -123,6 +134,7 @@
 
       //navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       //pcCaller.addStream(localStream);
+
       //Then 
       //Caller listen to his peerconnection for some icecandidate and when one is found the caller send it to the callee 
 
@@ -135,19 +147,42 @@
         if (event.candidate != null) {
           console.log("ice candidate found");
           console.log(event.candidate);
-          socket.emit("request", { type: 'iceCandidate', name: callee, candidate: event.candidate });
+          socket.emit("request", { type: 'iceCandidateToCallee', name: callee, candidate: event.candidate });
         }
       });
+
+      dataChannel.addEventListener("open", ev => {
+        const readyState = dataChannel.readyState;
+        console.log("Send channel state is: " + readyState);
+        dataChannel.send("coucou bro");
+      });
+      dataChannel.addEventListener("error", ev => {
+        console.log(ev);
+      });
+
+
+
 
       // Listen for connectionstatechange on the local RTCPeerConnection
-      pcCaller.addEventListener('connectionstatechange', event => {
-        if (pcCaller.connectionState === 'connected') {
-          // Peers connected!
-          console.log("GGWP peers connected!");
-        }
-      });
+
+
+
     });
 
+
+
+    socket.on('calleeIceCandidate', async calleeIceCandidate => {
+      console.log(calleeIceCandidate);
+      if (calleeIceCandidate) {
+        //Try to add the caller ice candidate 
+        try {
+          await pcCaller.addIceCandidate(calleeIceCandidate);
+          console.log("callee ice cadidate added");
+        } catch (e) {
+          console.error('Error adding received ice candidate', e);
+        }
+      }
+    });
 
 
     //-----------------------------Callee side----------------------------------//
@@ -160,17 +195,30 @@
 
 
     //receiving a peerConnection offer from the caller (send by the signaling server)
-    socket.on("pcOffer", async callerSdp => {
+    socket.on("pcOffer", async (callerSdp, dc) => {
       //creating the callee peer connection
       pcCallee = new RTCPeerConnection();
+      dataChannel = dc;
       //Setting the caller sdp description
       await pcCallee.setRemoteDescription(callerSdp);
       console.log("caller description set:");
       console.log(callerSdp);
+
+      pcCallee.addEventListener('icecandidate', event => {
+
+        if (event.candidate != null) {
+          console.log("ice candidate found");
+          console.log(event.candidate);
+          socket.emit("request", { type: 'iceCandidateToCaller', name: callee, candidate: event.candidate });
+        }
+      });
       //Creating the callee sdp answer 
       var calleeSdp = await pcCallee.createAnswer();
+      pcCallee.setLocalDescription(calleeSdp);
+
       //Sending the callee sdp to the caller 
       socket.emit("request", { type: "sdpCallee", name: caller, sdp: calleeSdp })
+
     });
 
     //Signaling server emiting caller ice candidate 
@@ -185,7 +233,15 @@
           console.error('Error adding received ice candidate', e);
         }
       }
+      dataChannel.send("coucou bro");
+      // searching for callee candidate 
+
     });
+
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////
 
     socket.on("disconnection", senderName2 => {
 
@@ -207,13 +263,7 @@
       }
 
     });
-    /*for (let i = 0; i < offerButton.length; i++) {
-      offerButton[i].addEventListener("click", function (event) {
-        let name = this.id;
-        socket.emit("request", { type: "offer", userName: name });
-        console.log("emit offer");
-      });
-    }*/
+
 
 
   </script>
