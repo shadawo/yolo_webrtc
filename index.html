@@ -46,6 +46,12 @@
     var pcCaller;
     var pcCallee;
     var dataChannel;
+
+    function messageReceive(dataChannel) {
+      dataChannel.addEventListener("message", event => {
+        console.log("Message received : " + event.data);
+      });
+    }
     /*
         const stream = navigator.mediaDevices.getUserMedia({ audio: true });
     
@@ -95,12 +101,13 @@
       //Creating the caller peer connection and his sdp
       pcCaller = new RTCPeerConnection();
       dataChannel = pcCaller.createDataChannel("dataChannel");
-
+      console.log(dataChannel);
 
       pcCaller.addEventListener('connectionstatechange', event => {
         console.log("connection ?")
         if (pcCaller.connectionState === 'connected') {
           // Peers connected!
+          messageReceive(dataChannel);
           console.log("GGWP peers connected!");
         }
       });
@@ -154,7 +161,7 @@
       dataChannel.addEventListener("open", ev => {
         const readyState = dataChannel.readyState;
         console.log("Send channel state is: " + readyState);
-        dataChannel.send("coucou bro");
+        dataChannel.send("coucou bro 2");
       });
       dataChannel.addEventListener("error", ev => {
         console.log(ev);
@@ -198,7 +205,19 @@
     socket.on("pcOffer", async (callerSdp, dc) => {
       //creating the callee peer connection
       pcCallee = new RTCPeerConnection();
-      dataChannel = dc;
+      // dataChannel = dc;
+      // console.log(dc);
+      pcCallee.addEventListener("datachannel", ev => {
+        dataChannel = ev.channel;
+
+        console.log("datachannel ? : ");
+        console.log(dataChannel);
+
+        dataChannel.send("coucou bro");
+        messageReceive(dataChannel);
+
+      }, false);
+      //messageReceive(dataChannel);
       //Setting the caller sdp description
       await pcCallee.setRemoteDescription(callerSdp);
       console.log("caller description set:");
@@ -233,7 +252,7 @@
           console.error('Error adding received ice candidate', e);
         }
       }
-      dataChannel.send("coucou bro");
+
       // searching for callee candidate 
 
     });

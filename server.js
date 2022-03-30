@@ -98,6 +98,7 @@ io.on('connection', (socket) => {
 
         //Get the recipient socketId
         recipientSocketId = lookForUserSocketId(msg.name);
+        console.log(msg.dc);
         //send the sdp to the recipient 
         if (msg.name != null && recipientSocketId != null) {
           io.to(recipientSocketId).emit("pcOffer", msg.sdp, msg.dc);
