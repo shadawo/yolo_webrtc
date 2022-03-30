@@ -11,7 +11,7 @@ app.get('/', (req, res) => {
 
 var users = new Array();
 
-function loofForUserSocketId(name) {
+function lookForUserSocketId(name) {
   let i = 0;
   for (i; i < users.length; i++) {
     if (users[i].userName == name) {
@@ -38,6 +38,9 @@ function lookForUserName(socketId) {
   }
   return null;
 }
+var recipientSocketId;
+var senderName;
+
 io.on('connection', (socket) => {
   console.log("new  connection with id:" + socket.id);
 
@@ -68,9 +71,9 @@ io.on('connection', (socket) => {
       case "offer":
 
         //Get the recipient socketId
-        let recipientSocketId = loofForUserSocketId(msg.name);
+        recipientSocketId = lookForUserSocketId(msg.name);
         //Get the sender name
-        let senderName = lookForUserName(socket.id);
+        senderName = lookForUserName(socket.id);
 
         if (senderName != null && recipientSocketId != null) {
           console.log("User : " + senderName + " sending to " + recipientSocketId);
@@ -82,7 +85,7 @@ io.on('connection', (socket) => {
       case "answer":
 
         //Get the recipient socketId
-        recipientSocketId = loofForUserSocketId(msg.name);
+        recipientSocketId = lookForUserSocketId(msg.name);
         //Get the sender name
         senderName = lookForUserName(socket.id);
         if (senderName != null && recipientSocketId != null) {
@@ -94,7 +97,7 @@ io.on('connection', (socket) => {
       case "sdpCaller":
 
         //Get the recipient socketId
-        recipientSocketId = loofForUserSocketId(msg.name);
+        recipientSocketId = lookForUserSocketId(msg.name);
         //send the sdp to the recipient 
         if (msg.name != null && recipientSocketId != null) {
           io.to(recipientSocketId).emit("pcOffer", msg.sdp, msg.dc);
@@ -103,7 +106,7 @@ io.on('connection', (socket) => {
 
       case "sdpCallee":
         //Get the recipient socketId
-        recipientSocketId = loofForUserSocketId(msg.name);
+        recipientSocketId = lookForUserSocketId(msg.name);
         //send the sdp to the recipient 
         if (msg.name != null && recipientSocketId != null) {
           io.to(recipientSocketId).emit("calleeSdp", msg.sdp);
@@ -113,7 +116,7 @@ io.on('connection', (socket) => {
       case "iceCandidateToCallee":
 
         //Get the recipient socketId
-        recipientSocketId = loofForUserSocketId(msg.name);
+        recipientSocketId = lookForUserSocketId(msg.name);
         //send the iceCandidate to the recipient 
         if (msg.name != null && recipientSocketId != null) {
           console.log(msg.candidate);
@@ -124,7 +127,7 @@ io.on('connection', (socket) => {
       case "iceCandidateToCaller":
 
         //Get the recipient socketId
-        let recipientSocketId6 = loofForUserSocketId(msg.name);
+        let recipientSocketId6 = lookForUserSocketId(msg.name);
         //send the iceCandidate to the recipient 
         if (msg.name != null && recipientSocketId6 != null) {
           console.log(msg.candidate);
@@ -134,7 +137,7 @@ io.on('connection', (socket) => {
         break;
       case "leave":
 
-        recipientSocketId = loofForUserSocketId(msg.name);
+        recipientSocketId = lookForUserSocketId(msg.name);
         senderName = lookForUserName(socket.id);
         //notify the other user so he can disconnect his peer connection
         io.to(recipientSocketId).emit("disconnection", senderName);
