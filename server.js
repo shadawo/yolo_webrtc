@@ -82,51 +82,51 @@ io.on('connection', (socket) => {
       case "answer":
 
         //Get the recipient socketId
-        let recipientSocketId1 = loofForUserSocketId(msg.name);
+        recipientSocketId = loofForUserSocketId(msg.name);
         //Get the sender name
-        let senderName1 = lookForUserName(socket.id);
-        if (senderName1 != null && recipientSocketId1 != null) {
+        senderName = lookForUserName(socket.id);
+        if (senderName != null && recipientSocketId != null) {
           //send the answer to the recipient 
-          io.to(recipientSocketId1).emit("answer", senderName1);
+          io.to(recipientSocketId).emit("answer", senderName);
         }
 
         break;
       case "sdpCaller":
 
         //Get the recipient socketId
-        let recipientSocketId4 = loofForUserSocketId(msg.name);
+        recipientSocketId = loofForUserSocketId(msg.name);
         //send the sdp to the recipient 
-        if (msg.name != null && recipientSocketId4 != null) {
-          io.to(recipientSocketId4).emit("pcOffer", msg.sdp);
+        if (msg.name != null && recipientSocketId != null) {
+          io.to(recipientSocketId).emit("pcOffer", msg.sdp);
         }
         break;
 
       case "sdpCallee":
         //Get the recipient socketId
-        let recipientSocketId5 = loofForUserSocketId(msg.name);
+        recipientSocketId = loofForUserSocketId(msg.name);
         //send the sdp to the recipient 
-        if (msg.name != null && recipientSocketId5 != null) {
-          io.to(recipientSocketId5).emit("calleeSdp", msg.sdp);
+        if (msg.name != null && recipientSocketId != null) {
+          io.to(recipientSocketId).emit("calleeSdp", msg.sdp);
         }
         break;
 
       case "iceCandidate":
 
         //Get the recipient socketId
-        let recipientSocketId2 = loofForUserSocketId(msg.name);
+        recipientSocketId = loofForUserSocketId(msg.name);
         //send the iceCandidate to the recipient 
-        if (msg.name != null && recipientSocketId2 != null) {
+        if (msg.name != null && recipientSocketId != null) {
           console.log(msg.candidate);
-          io.to(recipientSocketId2).emit("callerIceCandidate", msg.candidate);
+          io.to(recipientSocketId).emit("callerIceCandidate", msg.candidate);
         }
 
         break;
       case "leave":
 
-        let recipientSocketId3 = loofForUserSocketId(msg.name);
-        let senderName2 = lookForUserName(socket.id);
+        recipientSocketId = loofForUserSocketId(msg.name);
+        senderName = lookForUserName(socket.id);
         //notify the other user so he can disconnect his peer connection
-        io.to(recipientSocketId3).emit("disconnection", senderName2);
+        io.to(recipientSocketId).emit("disconnection", senderName);
 
 
         break;
