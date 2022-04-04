@@ -1,0 +1,267 @@
+/* Foncer l'arrière-plan de la fenêtre modale */
+.modal {
+  z-index: 2;
+  display: table;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: rgb(0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Afficher la fenêtre modale lorsqu'elle est ciblée par un lien supprimer */
+.modal:target {
+  display: table;
+  position: absolute;
+}
+
+/* la fenêtre modale  */
+.modal-dialog {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+/* Le contenu de la modale */
+.modal-dialog .modal-content {
+  margin: auto;
+  background-color: #f3f3f3;
+  position: relative;
+  padding: 0;
+  outline: 0;
+  border: 1px #777 solid;
+  text-align: center;
+  width: 65%;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+
+  animation-name: slideDownFadeIN;
+  animation-duration: 0.5s;
+}
+
+.modalContainer {
+  padding: 2px 16px;
+}
+
+header {
+  background-color: #5cb85c;
+  font-size: 25px;
+  color: white;
+}
+
+footer {
+  background-color: #5cb85c;
+  font-size: 20px;
+  color: white;
+}
+
+.acceptButton {
+  color: #FFF;
+  background: #44CC44;
+  padding: 15px 20px;
+  box-shadow: 0 4px 0 0 #2EA62E;
+}
+
+.acceptButton:hover {
+  background: #6FE76F;
+  box-shadow: 0 4px 0 0 #7ED37E;
+}
+
+.deny {
+  color: #FFF;
+  background: tomato;
+  padding: 15px 20px;
+  box-shadow: 0 4px 0 0 #CB4949;
+}
+
+.deny:hover {
+  background: rgb(255, 147, 128);
+  box-shadow: 0 4px 0 0 #EF8282;
+}
+
+
+/* parti chat front end */
+
+main {
+  display: table;
+  width: 100%;
+
+}
+
+.contacts {
+  border-right: solid;
+  border-right-color: grey;
+  border-right-width: 1px;
+  width: 24%;
+  float: left;
+  height: 100%;
+  margin-top: 10%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: Segoe UI;
+
+
+}
+
+.newconv {
+  background-color: black;
+  text-align: center;
+  width: 24%;
+  position: absolute;
+  float: left;
+  font-family: Segoe UI;
+}
+
+.newconv p {
+
+  color: white;
+}
+
+.recherche {
+  background-color: white;
+}
+
+.search {
+  border-radius: 25px;
+  border: none;
+  background-color: #eeeeee;
+  background-image: url(../images/loupe.png);
+  background-position: 90%;
+  background-size: 8%;
+  background-repeat: no-repeat;
+  width: 80%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+  height: 40px;
+}
+
+form img {
+  position: relative;
+}
+
+.search[placeholder] {
+  padding-left: 10%;
+}
+
+.message {
+  float: left;
+  width: 75%;
+  height: 100%;
+  margin-top: 20%;
+  left: 24%;
+
+
+}
+
+.conversation img,
+.monami img {
+  width: 15%;
+  border-radius: 50%;
+  border: solid;
+  float: left;
+  margin-left: 5%;
+  margin-right: 5%;
+}
+
+.conversation {
+
+  border-bottom: solid;
+  border-bottom-color: #c0c0c0;
+
+}
+
+.monami {
+  background-color: #eeeeee;
+  width: 100%;
+  left: 24%;
+  position: absolute;
+  font-family: Segoe UI;
+
+}
+
+.monami img {
+  margin: 1%;
+  width: 7%;
+}
+
+.monami h1,
+.monami p {
+  float: left;
+  margin-top: 2%;
+}
+
+.monami p {
+  margin-top: 5%
+}
+
+.send {
+  border-radius: 25px;
+  border: solid 1px grey;
+  background-image: url(../images/send.png);
+  background-position: 99%;
+  background-size: 3%;
+  background-repeat: no-repeat;
+  margin-left: 2%;
+  width: 70%;
+
+  margin-bottom: 1%;
+  height: 40px;
+  position: fixed;
+  bottom: 0;
+
+}
+
+.send[placeholder] {
+  padding-left: 2%;
+}
+
+#----------------------Message------------------- .chat {
+  list-style: none;
+  background: none;
+  margin: 0;
+  padding: 0 0 50px 0;
+  margin-top: 60px;
+  margin-bottom: 10px;
+}
+
+.chat li {
+  padding: 0.5rem;
+  overflow: hidden;
+  display: flex;
+
+}
+
+
+.other .msg {
+  background-color: #eeeeee;
+
+}
+
+
+.self {
+  justify-content: flex-end;
+}
+
+.self .msg {
+  order: 1;
+  background-color: grey;
+  color: white;
+
+
+}
+
+.msg {
+
+  min-width: 50px;
+  padding: 10px;
+  border-radius: 25px;
+  font-family: Segoe UI;
+}
+
+.msg p {
+  font-size: 0.8rem;
+  margin: 0 0 0.2rem 0;
+}
+
+time {
+  padding-top: 0%;
+}
