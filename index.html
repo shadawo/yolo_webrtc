@@ -1,21 +1,106 @@
 <!DOCTYPE html>
 <html>
+<link href="css/app_style.css" rel="stylesheet">
 
 <head>
-  <title>Socket.IO chat</title>
+  <title>YOLO</title>
 
 </head>
 
 <body>
-  <button id="connect">connect</button>
-  <button class="offerButton">Make an offer</button>
-  <button class="Accept">Accept Call</button>
+
   <script src="/socket.io/socket.io.js"></script>
   <div id="cells">
     <div id="user">
     </div>
   </div>
+  <div id="modal"></div>
+
+  <div class="newconv">
+
+    <p> NOUVELLE DISCUSSION </p>
+
+    <div class="recherche">
+      <form>
+        <input type="text" name="text" class="search" placeholder="Recherchez un ami">
+      </form>
+    </div>
+  </div>
+
+  <div class="monami">
+    <img src="images/pers.png" />
+    <h1> Ami(e) </h1>
+    <p> En ligne </p>
+  </div>
+  </header>
+
+  <main>
+    <div class="contacts" id="contactList">
+
+      <div class="conversation">
+        <img src="images/pers.png" />
+        <h2> Ami(e) </h2>
+        <p> Votre dernier message </p>
+      </div>
+      <div class="conversation">
+        <img src="images/pers.png" />
+        <h2> Ami(e) </h2>
+        <p> Votre dernier message </p>
+      </div>
+
+    </div>
+    <div class="message">
+
+      <ol class="chat" id="chat">
+        <li class="other">
+
+          <div class="msg">
+            <p>Salut!</p>
+            <p>Tu viens au ciné ce soir ?</p>
+
+          </div>
+        </li>
+
+        <li class="self">
+          <div class="msg">
+            <p>Puff...</p>
+            <p>Je dois réviser </p>
+            <p>Un autre jour peut être</p>
+          </div>
+
+        </li>
+
+        <li class="other">
+          <div class="msg">
+            <p>Tu dois réviser quoi?</p>
+
+          </div>
+
+        </li>
+      </ol>
+      <input id="messageInput" class="send" type="text">
+
+    </div>
+  </main>
+
   <script>
+    let divMessage = document.getElementById("messageInput");
+    divMessage.addEventListener("change", e => {
+      sendMessage(dataChannel, divMessage.value);
+      divMessage.value = "";
+    });
+
+    function displayOffer(senderName) {
+      let divModal = document.getElementById("modal");
+      divModal.innerHTML += `<div id="offer" class="modal">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <header class="modalContainer"> Offer By ${senderName}</header>
+            <button class=acceptButton id=${senderName}>Accept offer send by:${senderName}</button>          
+          </div >
+        `;
+    }
+
     var socket = io();
     var userName = "patoche" + Math.random();
 
@@ -26,12 +111,7 @@
     /*
     var firstName = ...
     var lastName = ...
-   */
-    /*
-      document.getElementById("connect").addEventListener("click", function (event) {
-        socket.emit("request", { type: "login", name: userName + Math.random() });
-      });
-  */
+    */
 
     var userList = new Array();
     var callee;
@@ -50,8 +130,30 @@
     function messageReceive(dataChannel) {
       dataChannel.addEventListener("message", event => {
         console.log("Message received : " + event.data);
+        let divMsg = document.getElementById("chat");
+        divMsg.innerHTML += `
+        <li class="other">
+        <div class="msg">
+            <p>${event.data}</p>
+        </div>
+        </li>
+        `;
       });
     }
+    function sendMessage(dataChannel, message) {
+      if (dataChannel.readyState == "open") {
+        dataChannel.send(message);
+        let divMsg = document.getElementById("chat");
+        divMsg.innerHTML += `
+        <li class="self">
+        <div class="msg">
+            <p>${message}</p>
+        </div>
+        </li>
+        `;
+      }
+    }
+
     /*
         const stream = navigator.mediaDevices.getUserMedia({ audio: true });
     
@@ -74,9 +176,20 @@
       userList.push(user);
       let id = userList.length;
       //Add to the list of user on the UI 
-      cells.innerHTML += `<div id="user${id}">${user}
-                              <button class="offerButton" id="${user}">Make an offer</button>
-                          </div>`
+      let contactList = document.getElementById("contactList");
+      contactList.innerHTML += `
+      <div class="conversation" id="user${id}">
+        <img src="images/pers.png" />
+        <h2>${user}</h2>
+        <p><button class="offerButton" id="${user}">Make an offer</button></p>
+      </div>
+      `
+
+      /*
+      cells.innerHTML += `<div id = "user${id}" > ${user}
+      <button class="offerButton" id="${user}">Make an offer</button>
+                          </div > `
+    */
     }
 
     socket.on("newUser", user => {
@@ -99,9 +212,12 @@
       console.log("Connexion accepté de :" + receiverName);
 
       //Creating the caller peer connection and his sdp
-      pcCaller = new RTCPeerConnection();
-      dataChannel = pcCaller.createDataChannel("dataChannel");
-      console.log(dataChannel);
+      if (pcCaller == undefined) {
+        pcCaller = new RTCPeerConnection();
+        dataChannel = pcCaller.createDataChannel("dataChannel");
+        //console.log(dataChannel);
+      }
+
 
       pcCaller.addEventListener('connectionstatechange', event => {
         console.log("connection ?")
@@ -112,16 +228,6 @@
         }
       });
 
-      pcCaller.onicecandidate = e => {
-        if (e.candidate === null) {
-          //console.log(pcCaller.localDescription.sdp)
-        }
-        else {
-          console.log("ice candidate trouvé : ");
-          console.log(e.candidate);
-        }
-
-      };
       var CallerSdp = await pcCaller.createOffer({ iceRestart: true });
       //Sending the caller sdp to the callee  
       socket.emit("request", { type: "sdpCaller", name: receiverName, sdp: CallerSdp, dc: dataChannel })
@@ -161,7 +267,7 @@
       dataChannel.addEventListener("open", ev => {
         const readyState = dataChannel.readyState;
         console.log("Send channel state is: " + readyState);
-        dataChannel.send("coucou bro 2");
+        sendMessage(dataChannel, "coucou bro 2");
       });
       dataChannel.addEventListener("error", ev => {
         console.log(ev);
@@ -197,7 +303,8 @@
     // callee received an offer from the caller 
     socket.on("offer", senderName => {
       console.log("Demande de connexion de:" + senderName);
-      cells.innerHTML += `<button class=acceptButton id=${senderName}>Accept offer send by:${senderName}</button>`;
+      displayOffer(senderName);
+      //cells.innerHTML += `<button class=acceptButton id = ${senderName}> Accept offer send by:${senderName}</button >`;
     });
 
 
@@ -213,7 +320,7 @@
         console.log("datachannel ? : ");
         console.log(dataChannel);
 
-        dataChannel.send("coucou bro");
+        sendMessage(dataChannel, "coucou bro");
         messageReceive(dataChannel);
 
       }, false);
@@ -275,6 +382,7 @@
       }
       if (e.target && e.target.className == 'acceptButton') {
         console.log(e.target);
+        let divModal = document.getElementById("offer").style.display = "none";
         //callee accepted the offer and sending back his answer to the caller 
         socket.emit("request", { type: "answer", name: e.target.id });
         console.log(e.target.id);

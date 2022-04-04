@@ -1,11 +1,12 @@
 <html lang="fr">
 
 <head>
-  <title>Chat screen</title>
+  <title>YOLO</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/main.css">
+  <script src="yolo_web_rtc.js"> </script>
   <!-- Font Awesome File -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -25,9 +26,6 @@
               <div class="heading-avatar-icon">
                 <img src="img/man-2-512.png">
               </div>
-              <div class="text-center">
-                <h2>Mes amis </h2>
-              </div>
             </div>
             <div class="col-sm-1 col-xs-1  heading-dot  pull-right">
               <i class="fa fa-ellipsis-v fa-2x  pull-right" aria-hidden="true"></i>
@@ -40,14 +38,15 @@
           <div class="row searchBox">
             <div class="col-sm-12 searchBox-inner">
               <div class="form-group has-feedback">
-                <input id="searchText" type="text" class="form-control" name="searchText" placeholder="Search">
+                <input id="searchText" type="text" class="form-control" name="searchText"
+                  placeholder="Recherchez un ami">
                 <span class="glyphicon glyphicon-search form-control-feedback"></span>
               </div>
             </div>
           </div>
 
           <!-- Search Box End -->
-          <!-- sideBar -->
+          <!-- sideBar friend-->
           <div class="row sideBar">
             <div class="row sideBar-body">
               <div class="col-sm-3 col-xs-3 sideBar-avatar">
@@ -510,7 +509,7 @@
             <div class="col-sm-12 message-main-receiver">
               <div class="receiver">
                 <!--
-                <div class="message-text">
+                <div class="message-text-">
                   Hey, Its Awesome..!
                 </div>
               -->
